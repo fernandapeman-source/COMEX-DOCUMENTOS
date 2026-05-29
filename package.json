@@ -1,0 +1,19 @@
+{
+  "name": "peman-comex-app",
+  "version": "1.0.0",
+  "description": "Automatización de documentos de comercio exterior - OSCAR PEMAN Y ASOCIADOS",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "adm-zip": "^0.5.16",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mammoth": "^1.8.0",
+    "multer": "^1.4.5-lts.1",
+    "xlsx": "^0.18.5"
+  }
+}

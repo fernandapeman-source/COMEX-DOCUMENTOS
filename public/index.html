@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PEMAN — Comercio Exterior Automatizado</title>
+  <link rel="stylesheet" href="styles.css" />
+  <!-- Templates embedded as base64 -->
+  <script src="templates_data.js"></script>
+  <!-- Lab & cert templates -->
+  <script src="lab_template_data.js"></script>
+  <script src="certs_template_data.js"></script>
+  <!-- Certificate of Origin template -->
+  <script src="cert_origin_data.js"></script>
+  <!-- JSZip for xlsx/docx manipulation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <!-- SheetJS for reading uploaded xlsx files -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <!-- Google Sheets integration -->
+  <script src="sheets.js"></script>
+</head>
+<body>
+
+  <!-- ── Header ── -->
+  <header>
+    <div class="header-inner">
+      <div class="logo-area">
+        <img src="logo.png" alt="PEMAN Specialities" class="logo-img" />
+      </div>
+      <div class="header-tagline">Automatización de Documentos<br>de Comercio Exterior</div>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- Operación guardada — banner superior -->
+    <div id="savedOpBanner" class="saved-op-banner hidden">
+      <span id="savedOpLabel"></span>
+      <button class="btn-sm btn-danger" id="btnClearOp">Borrar operación</button>
+    </div>
+
+    <!-- Google Sheets — config bar -->
+    <div class="apikey-bar gs-bar" id="sec-sheets">
+      <span class="apikey-label">🟢 Google Sheets</span>
+      <span id="gsStatusDot" class="gs-dot gs-dot--off" title="No conectado"></span>
+      <input type="text" id="gsClientId" placeholder="Client ID (*.apps.googleusercontent.com)" autocomplete="off" style="flex:2;min-width:220px" />
+      <input type="text" id="gsSheetId"  placeholder="ID del Google Sheet" autocomplete="off" style="flex:1.2;min-width:160px" />
+      <button class="btn-save-key" id="btnGsSave">Guardar</button>
+      <button class="btn-save-key" id="btnGsConnect" style="background:#1a6b3c">Conectar</button>
+      <span class="apikey-hint" id="gsHint">Configurá para registrar operaciones automáticamente</span>
+    </div>
+
+    <!-- API Key — compact bar -->
+    <div class="apikey-bar" id="sec-apikey">
+      <span class="apikey-label">🔑 API Key</span>
+      <input type="password" id="apiKey" placeholder="sk-ant-..." autocomplete="off" />
+      <button class="btn-save-key" id="btnSaveKey">Guardar</button>
+      <button class="btn-save-key" id="btnTestKey" style="background:#2e7d52">Verificar</button>
+      <span class="apikey-hint" id="apikeyHint">Se guarda en tu navegador</span>
+    </div>
+
+    <!-- Upload -->
+    <section class="card">
+      <h2>Documentos de la Operación</h2>
+      <div id="dropzone" class="dropzone">
+        <div class="drop-icon">📄</div>
+        <p><strong>Arrastrá y soltá los archivos aquí</strong></p>
+        <p class="hint">o hacé clic para seleccionar</p>
+        <p class="hint">PDF · XLSX · DOCX · JPG · PNG — hasta 20 archivos</p>
+        <input type="file" id="fileInput" multiple accept=".pdf,.xlsx,.xls,.docx,.doc,.txt,.jpg,.jpeg,.png,.gif,.webp" />
+      </div>
+      <ul id="fileList" class="file-list"></ul>
+    </section>
+
+    <!-- Analyze -->
+    <div class="center-row" style="flex-direction:column;gap:.6rem">
+      <button class="btn-primary btn-large" id="btnGenerate">
+        🔍&nbsp; Analizar Documentos
+      </button>
+      <div class="note-field" style="width:100%;max-width:480px">
+        <label for="noteInput" style="font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Nota adicional (opcional)</label>
+        <input type="text" id="noteInput" placeholder="Ej: BL es TELEX, 4 contenedores..." style="width:100%;margin-top:.3rem" />
+      </div>
+    </div>
+
+    <!-- Progress -->
+    <div id="progressArea" class="hidden">
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <p id="progressMsg" class="progress-msg">Procesando...</p>
+    </div>
+
+    <!-- Summary -->
+    <section class="card hidden" id="summaryCard">
+      <h2>Resumen de la Operación</h2>
+      <div id="summaryContent" class="summary-grid"></div>
+    </section>
+
+    <!-- Documentos Comerciales -->
+    <section class="card hidden" id="comercialCard">
+      <h2>📄 Documentos Comerciales</h2>
+      <div id="comercialGenArea">
+        <div class="options-row" style="margin-bottom:.9rem">
+          <div>
+            <label for="stageSelect">Etapa (auto-detectada si no se elige)</label>
+            <select id="stageSelect">
+              <optgroup label="── Por etapa ──────────────────">
+                <option value="">Auto-detectar</option>
+                <option value="1">Etapa 1 — Packing List Aduana + Proforma</option>
+                <option value="2">Etapa 2 — Resumen de Carga + PL Comercial + Decl. Embarque</option>
+                <option value="3">Etapa 3 — Todos los documentos</option>
+              </optgroup>
+              <optgroup label="── Documento individual ───────">
+                <option value="solo_proforma">Solo Proforma</option>
+                <option value="solo_packing_aduana">Solo Packing List Aduana</option>
+                <option value="solo_packing_comercial">Solo Packing List Comercial</option>
+                <option value="solo_declaracion">Solo Declaración de Embarque</option>
+                <option value="solo_resumen">Solo Resumen de Carga</option>
+                <option value="solo_cert_origen">Solo Certificado de Origen</option>
+              </optgroup>
+            </select>
+          </div>
+        </div>
+        <button class="btn-primary" id="btnGenComercial">⚙️ Generar documentos comerciales</button>
+      </div>
+      <div id="downloadButtons" class="download-grid" style="margin-top:.8rem"></div>
+    </section>
+
+    <!-- Certificados de Calidad -->
+    <section class="card hidden" id="certsCard">
+      <h2>🔬 Certificados de Calidad</h2>
+
+      <!-- Paso 1 -->
+      <div class="cert-subproc">
+        <h3 class="cert-subproc-title">Paso 1 — Planilla para el Laboratorio</h3>
+        <p class="cert-hint">Descargá la planilla pre-completada con los contenedores y precintos. Completá los resultados de análisis y guardá el archivo.</p>
+        <div style="margin-top:.7rem">
+          <button class="btn-secondary" id="btnGenLab">📋 Descargar Planilla de Laboratorio</button>
+        </div>
+      </div>
+
+      <div class="cert-divider"></div>
+
+      <!-- Paso 2 -->
+      <div class="cert-subproc">
+        <h3 class="cert-subproc-title">Paso 2 — Generar Certificados de Calidad</h3>
+        <p class="cert-hint">Una vez completada la planilla, subila aquí para generar los 4 certificados.</p>
+        <div id="labDropzone" class="lab-dropzone">
+          <span>📤 Arrastrá la planilla completada o hacé clic para seleccionar</span>
+          <input type="file" id="labFileInput" accept=".xlsx,.xls" />
+        </div>
+        <p id="labFileName" class="cert-hint hidden" style="margin-top:.4rem"></p>
+        <div class="cert-date-row" style="margin-top:.8rem">
+          <label for="consolidationDate" style="display:block;font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.3rem">Fecha de Consolidación</label>
+          <input type="text" id="consolidationDate" placeholder="Ej: 10/04/2026" style="max-width:200px;padding:.45rem .7rem;font-size:.9rem;border:1px solid var(--border);border-radius:6px;outline:none;" />
+        </div>
+        <div style="margin-top:.8rem">
+          <label for="bagBrandSelect" style="display:block;font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.3rem">Marca de Bolsa (Packing)</label>
+          <select id="bagBrandSelect" style="padding:.45rem .7rem;font-size:.9rem;border:1px solid var(--border);border-radius:6px;outline:none;min-width:200px;">
+            <option value="">— Auto (del documento) —</option>
+            <option value="TASTY">TASTY</option>
+            <option value="WHITE">WHITE</option>
+            <option value="NUTRIVIBE">NUTRIVIBE</option>
+            <option value="BE POWER">BE POWER</option>
+            <option value="UP">UP</option>
+          </select>
+        </div>
+        <div style="margin-top:.7rem">
+          <button class="btn-primary" id="btnGenCerts" disabled>📄 Generar Certificados</button>
+        </div>
+        <div id="certsDownloads" class="download-grid" style="margin-top:.8rem"></div>
+      </div>
+    </section>
+
+    <!-- Error -->
+    <div id="errorBox" class="error-box hidden"></div>
+
+  </main>
+
+  <footer>
+    <p>PEMAN Specialities · RUTA NACIONAL N° 9 KM 761 · SINSACATE, CÓRDOBA · comex@peman.com.ar</p>
+  </footer>
+
+  <script src="main.js?v=45"></script>
+</body>
+</html>

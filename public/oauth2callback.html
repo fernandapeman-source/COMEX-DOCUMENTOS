@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Conectando con Google...</title>
+  <style>
+    body { font-family: Arial, sans-serif; display: flex; align-items: center; justify-content: center;
+           height: 100vh; margin: 0; background: #f7f4f0; color: #2a1a0e; }
+    .box { text-align: center; padding: 2rem; }
+    .icon { font-size: 3rem; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div class="icon" id="icon">⏳</div>
+    <p id="msg">Procesando autenticación...</p>
+  </div>
+  <script>
+    // This page is loaded in the OAuth popup.
+    // The token is in the URL hash — the opener reads it via interval polling.
+    // Just show success and the opener will close this window.
+    const hash = window.location.hash;
+    if (hash && hash.includes('access_token')) {
+      document.getElementById('icon').textContent = '✅';
+      document.getElementById('msg').textContent  = 'Cuenta conectada. Esta ventana se cerrará automáticamente.';
+      // Give the opener a moment to read the hash, then close
+      setTimeout(() => window.close(), 2000);
+    } else if (hash.includes('error')) {
+      document.getElementById('icon').textContent = '❌';
+      document.getElementById('msg').textContent  = 'Error al conectar. Podés cerrar esta ventana.';
+    } else {
+      document.getElementById('icon').textContent = '❌';
+      document.getElementById('msg').textContent  = 'No se recibió el token. Cerrá esta ventana e intentá de nuevo.';
+    }
+  </script>
+</body>
+</html>

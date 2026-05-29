@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "shipsgo": {
+      "command": "py",
+      "args": [
+        "C:/Users/54352/OneDrive/Desktop/IA PRUEBA/Code/shipsgo_mcp/server.py"
+      ],
+      "env": {
+        "SHIPSGO_TOKEN": "95871254-f154-4ae9-83ae-f686758cf80c"
+      }
+    }
+  }
+}

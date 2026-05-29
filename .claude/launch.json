@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "peman-comex",
+      "runtimeExecutable": "C:\\Program Files\\Git\\usr\\bin\\perl.exe",
+      "runtimeArgs": ["server_http.pl"],
+      "port": 3000
+    },
+    {
+      "name": "panel-financiero",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "streamlit", "run", "dashboard.py", "--server.port", "8501", "--server.headless", "true"],
+      "port": 8501
+    }
+  ]
+}
