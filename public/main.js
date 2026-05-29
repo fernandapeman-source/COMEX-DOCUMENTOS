@@ -1133,6 +1133,8 @@ btnGenCerts.addEventListener('click', async () => {
   try {
     const files = await generateCertificates(labFile);
     renderCertsDownloads(files);
+    // Sync lab results to Google Sheets (merges into existing row, only fills empty cells)
+    syncOperationToSheets(currentMap, currentStage);
     btnGenCerts.textContent = '✓ Certificados generados';
     setTimeout(() => { btnGenCerts.disabled = false; btnGenCerts.textContent = '📄 Generar Certificados'; }, 2500);
   } catch (e) {
@@ -1309,6 +1311,7 @@ async function generateCertificates(file) {
   if (!currentMap) throw new Error('Primero generá los documentos de la operación.');
 
   const labResults    = await parseLab(file);
+  Object.assign(currentMap, labResults);   // persist lab results into currentMap for Sheets sync
   const certMap       = { ...currentMap, ...labResults };
 
   // REF_CONTRACT siempre = número de operación PEMAN + " C"
