@@ -22,6 +22,7 @@ const GS_COLUMNS = [
   // Vessel / Logística
   { key: 'VESSEL',                     header: 'Buque' },
   { key: 'VOYAGE',                     header: 'Viaje' },
+  { key: 'VESSEL_VOYAGE',              header: 'Buque / Viaje' },
   { key: 'FLAG',                       header: 'Bandera' },
   { key: 'POL',                        header: 'Puerto Origen (POL)' },
   { key: 'POD',                        header: 'Puerto Destino (POD)' },
@@ -36,15 +37,19 @@ const GS_COLUMNS = [
   { key: 'ATA',                        header: 'ATA N°' },
   { key: 'ATA_CUIT',                   header: 'ATA CUIT' },
   { key: 'DESPACHANTE',                header: 'Despachante' },
-  { key: 'POSICION_ARANCELARIA_FULL',  header: 'Posición Arancelaria' },
+  { key: 'POSICION_ARANCELARIA_FULL',  header: 'Posición Arancelaria (Completa)' },
+  { key: 'POSICION_ARANCELARIA',       header: 'Posición Arancelaria (6 dígitos)' },
   { key: 'CANTIDAD_ORIGINALES',        header: 'B/L Originales' },
-  // Consignee / Cliente
+  // Consignee / Notify / Cliente
   { key: 'CONSIGNEE_NAME',             header: 'Consignee Nombre' },
   { key: 'CONSIGNEE_ADDRESS',          header: 'Consignee Dirección' },
+  { key: 'NOTIFY_NAME',                header: 'Notify Nombre' },
+  { key: 'NOTIFY_ADDRESS',             header: 'Notify Dirección' },
   { key: 'CLIENTE_NOMBRE',             header: 'Cliente Nombre' },
   { key: 'CLIENTE_DIRECCION',          header: 'Cliente Dirección' },
   // Producto
   { key: 'PRODUCT',                    header: 'Producto' },
+  { key: 'GOODS_DESCRIPTION',          header: 'Descripción Mercadería' },
   { key: 'CROP',                       header: 'Cosecha (Crop)' },
   { key: 'CALIBER',                    header: 'Calibre' },
   { key: 'PACKING',                    header: 'Tipo Embalaje' },
@@ -54,12 +59,17 @@ const GS_COLUMNS = [
   { key: 'INCOTERM',                   header: 'Incoterm' },
   { key: 'PAYMENT_TERM',               header: 'Condición de Pago' },
   { key: 'CURRENCY',                   header: 'Moneda' },
+  { key: 'PF_QUANTITY_1',              header: 'Cantidad (Proforma)' },
+  { key: 'PF_UNIT VALUE_1',            header: 'Precio Unitario' },
   { key: 'TOTAL_VALOR',                header: 'Valor Total (FOB)' },
   // Pesos y cantidades
   { key: 'TOTAL_NETO',                 header: 'Peso Neto Total (kg)' },
   { key: 'TOTAL_BRUTO',                header: 'Peso Bruto Total (kg)' },
   { key: 'TOTAL_BOLSAS',               header: 'Total Bolsas/Bultos' },
-  // Specs de calidad
+  { key: 'TOTAL_CBM',                  header: 'Total CBM (m³)' },
+  // Contenedores (resumen)
+  { key: 'CONTAINERS_NUMBERS',         header: 'Todos los Contenedores' },
+  // Specs de calidad (contrato)
   { key: 'Moisture',                   header: 'Spec Humedad (%)' },
   { key: 'Udersize',                   header: 'Spec Undersize (%)' },
   { key: 'Splits',                     header: 'Spec Splits (%)' },
@@ -70,17 +80,24 @@ const GS_COLUMNS = [
 // Agregar columnas por contenedor (hasta 10)
 for (let i = 1; i <= 10; i++) {
   GS_COLUMNS.push(
-    { key: `CONTAINER_${i}`,       header: `Contenedor ${i}` },
-    { key: `BOLSAS_${i}`,          header: `Bolsas Cont.${i}` },
-    { key: `PESO_NETO_${i}`,       header: `Peso Neto Cont.${i} (kg)` },
-    { key: `PESO_BRUTO_${i}`,      header: `Peso Bruto Cont.${i} (kg)` },
-    { key: `PRECINTO_ADUANA_${i}`, header: `Precinto Aduana Cont.${i}` },
-    { key: `PRECINTO_LINEA_${i}`,  header: `Precinto Línea Cont.${i}` },
-    { key: `NOMBRE_${i}`,          header: `Chofer Nombre Cont.${i}` },
-    { key: `APELLIDO_${i}`,        header: `Chofer Apellido Cont.${i}` },
-    { key: `DNI_${i}`,             header: `DNI Chofer Cont.${i}` },
-    { key: `TRACTOR_${i}`,         header: `Tractor Cont.${i}` },
-    { key: `SEMI_${i}`,            header: `Semi Cont.${i}` },
+    { key: `CONTAINER_${i}`,         header: `Contenedor ${i}` },
+    { key: `BOLSAS_${i}`,            header: `Bolsas Cont.${i}` },
+    { key: `PESO_NETO_${i}`,         header: `Peso Neto Cont.${i} (kg)` },
+    { key: `PESO_BRUTO_${i}`,        header: `Peso Bruto Cont.${i} (kg)` },
+    { key: `PRECINTO_ADUANA_${i}`,   header: `Precinto Aduana Cont.${i}` },
+    { key: `PRECINTO_LINEA_${i}`,    header: `Precinto Línea Cont.${i}` },
+    { key: `NOMBRE_${i}`,            header: `Chofer Nombre Cont.${i}` },
+    { key: `APELLIDO_${i}`,          header: `Chofer Apellido Cont.${i}` },
+    { key: `DNI_${i}`,               header: `DNI Chofer Cont.${i}` },
+    { key: `TRACTOR_${i}`,           header: `Tractor Cont.${i}` },
+    { key: `SEMI_${i}`,              header: `Semi Cont.${i}` },
+    // Resultados de laboratorio por contenedor
+    { key: `OP_SAMPLE_${i}`,         header: `Muestra Cont.${i}` },
+    { key: `MOISTURE_${i}`,          header: `Humedad Cont.${i} (%)` },
+    { key: `BELOW_SIEVE_35_${i}`,    header: `Undersize Cont.${i} (%)` },
+    { key: `SPLITS_${i}`,            header: `Splits Cont.${i} (%)` },
+    { key: `FOREIGN_MATTER_${i}`,    header: `Foreign Matter Cont.${i} (%)` },
+    { key: `TOTAL_DEFECTS_${i}`,     header: `Total Defects Cont.${i} (%)` },
   );
 }
 
@@ -216,9 +233,17 @@ function colToLetter(n) {
 async function ensureHeaders(token, sheetId) {
   const data = await sheetsGet(token, sheetId, 'A1:1');
   const firstRow = (data.values || [])[0] || [];
+  const headers = GS_COLUMNS.map(c => c.header);
+
   if (firstRow[0] !== 'N° Operación') {
-    const headers = GS_COLUMNS.map(c => c.header);
+    // Sheet vacío — crear todos los headers
     await sheetsUpdate(token, sheetId, `A1:${colToLetter(headers.length)}1`, [headers]);
+  } else if (firstRow.length < headers.length) {
+    // Sheet existente con menos columnas — agregar las nuevas al final
+    const missing = headers.slice(firstRow.length);
+    const startCol = colToLetter(firstRow.length + 1);
+    const endCol   = colToLetter(headers.length);
+    await sheetsUpdate(token, sheetId, `${startCol}1:${endCol}1`, [missing]);
   }
 }
 
