@@ -1,0 +1,7 @@
+informe_recepciones/
+stock_real/
+node_modules/
+__pycache__/
+*.tmp
+*.zip
+.env
