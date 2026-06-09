@@ -117,92 +117,6 @@ function flash(btn, msg) {
   setTimeout(() => { btn.textContent = orig; }, 2000);
 }
 
-/* ════════════════════════════════════════════════════════════════════════
-   GOOGLE SHEETS — config panel
-   ════════════════════════════════════════════════════════════════════════ */
-(function initGoogleSheets() {
-  const clientIdInput = document.getElementById('gsClientId');
-  const sheetIdInput  = document.getElementById('gsSheetId');
-  const btnSave       = document.getElementById('btnGsSave');
-  const btnConnect    = document.getElementById('btnGsConnect');
-  const statusDot     = document.getElementById('gsStatusDot');
-  const hint          = document.getElementById('gsHint');
-
-  if (!clientIdInput) return;   // panel not present
-
-  // Restore saved values
-  clientIdInput.value = gsGetClientId();
-  sheetIdInput.value  = gsGetSheetId();
-  updateGsDot();
-
-  function updateGsDot() {
-    const connected = gsIsConnected();
-    statusDot.className = `gs-dot gs-dot--${connected ? 'on' : 'off'}`;
-    statusDot.title     = connected ? 'Conectado a Google' : 'No conectado';
-    btnConnect.textContent = connected ? 'Reconectar' : 'Conectar';
-    if (connected) {
-      hint.textContent  = '✓ Conectado — las operaciones se registrarán automáticamente';
-      hint.style.color  = '#1a6b3c';
-    } else {
-      hint.textContent  = 'Configurá para registrar operaciones automáticamente';
-      hint.style.color  = '';
-    }
-  }
-
-  btnSave.addEventListener('click', () => {
-    gsSetClientId(clientIdInput.value);
-    gsSetSheetId(sheetIdInput.value);
-    flash(btnSave, '✓ Guardado');
-  });
-
-  btnConnect.addEventListener('click', async () => {
-    gsSetClientId(clientIdInput.value);
-    gsSetSheetId(sheetIdInput.value);
-    const cid = gsGetClientId();
-    if (!cid) { hint.textContent = '⚠ Ingresá el Client ID primero'; hint.style.color = '#c0392b'; return; }
-    btnConnect.disabled = true;
-    hint.textContent = '⏳ Abriendo Google...';
-    hint.style.color = '';
-    try {
-      await gsConnect();
-      updateGsDot();
-    } catch (e) {
-      hint.textContent = '✗ ' + e.message;
-      hint.style.color = '#c0392b';
-    }
-    btnConnect.disabled = false;
-  });
-})();
-
-/* ── Sync operation to Google Sheets (called after each generation) ──────── */
-async function syncOperationToSheets(map, stage) {
-  if (!gsIsConnected() || !gsGetSheetId()) return;  // silently skip if not configured
-  try {
-    const result = await gsSyncOperation(map, stage);
-    showGsToast(result.action === 'created'
-      ? `✅ Operación ${map.REF_OPE} registrada en Google Sheets`
-      : `🔄 Operación ${map.REF_OPE} actualizada en Google Sheets`
-    );
-  } catch (e) {
-    showGsToast(`⚠ Sheets: ${e.message}`, true);
-    console.warn('Google Sheets sync error:', e);
-  }
-}
-
-function showGsToast(msg, isError = false) {
-  let toast = document.getElementById('gsToast');
-  if (!toast) {
-    toast = document.createElement('div');
-    toast.id = 'gsToast';
-    document.body.appendChild(toast);
-  }
-  toast.textContent  = msg;
-  toast.className    = `gs-toast ${isError ? 'gs-toast--error' : ''}`;
-  toast.style.opacity = '1';
-  clearTimeout(toast._timer);
-  toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 4000);
-}
-
 // ── Borrar operación guardada ──────────────────────────────────────────────
 document.getElementById('btnClearOp')?.addEventListener('click', () => {
   clearSavedOperation();
@@ -814,7 +728,6 @@ async function analyze() {
     currentCantOrig = cantOrig;
     currentStage    = manualStage;
     saveOperation(map, cantOrig, manualStage);
-    syncOperationToSheets(map, manualStage);
 
     document.getElementById('savedOpBanner')?.classList.add('hidden');
 
@@ -1133,8 +1046,6 @@ btnGenCerts.addEventListener('click', async () => {
   try {
     const files = await generateCertificates(labFile);
     renderCertsDownloads(files);
-    // Sync lab results to Google Sheets (merges into existing row, only fills empty cells)
-    syncOperationToSheets(currentMap, currentStage);
     btnGenCerts.textContent = '✓ Certificados generados';
     setTimeout(() => { btnGenCerts.disabled = false; btnGenCerts.textContent = '📄 Generar Certificados'; }, 2500);
   } catch (e) {

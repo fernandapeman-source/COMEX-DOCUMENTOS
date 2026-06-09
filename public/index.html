@@ -16,8 +16,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <!-- SheetJS for reading uploaded xlsx files -->
   <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
-  <!-- Google Sheets integration -->
-  <script src="sheets.js"></script>
 </head>
 <body>
 
@@ -37,17 +35,6 @@
     <div id="savedOpBanner" class="saved-op-banner hidden">
       <span id="savedOpLabel"></span>
       <button class="btn-sm btn-danger" id="btnClearOp">Borrar operación</button>
-    </div>
-
-    <!-- Google Sheets — config bar -->
-    <div class="apikey-bar gs-bar" id="sec-sheets">
-      <span class="apikey-label">🟢 Google Sheets</span>
-      <span id="gsStatusDot" class="gs-dot gs-dot--off" title="No conectado"></span>
-      <input type="text" id="gsClientId" placeholder="Client ID (*.apps.googleusercontent.com)" autocomplete="off" style="flex:2;min-width:220px" />
-      <input type="text" id="gsSheetId"  placeholder="ID del Google Sheet" autocomplete="off" style="flex:1.2;min-width:160px" />
-      <button class="btn-save-key" id="btnGsSave">Guardar</button>
-      <button class="btn-save-key" id="btnGsConnect" style="background:#1a6b3c">Conectar</button>
-      <span class="apikey-hint" id="gsHint">Configurá para registrar operaciones automáticamente</span>
     </div>
 
     <!-- API Key — compact bar -->
